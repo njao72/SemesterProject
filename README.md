@@ -50,3 +50,4 @@ Semesterproject
    schema.sql
  pom.xml
  readme.md
+ charts
