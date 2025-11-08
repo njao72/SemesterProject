@@ -9,7 +9,8 @@ Memebers:
 
 University Admissions Data Analysis
 
-The group deveopled a java based application with gui for analysis university admissions using swing, jdbc and visualisation components
+Project Goal:
+Develop a java desktop application (Swing) that imports CSV admissions data into a normalized relational DB, performs admissions statistics and ranking, and displays results with visualizations.
 
 The university application analyzes university admission data from 3 csv files:
 applicants.csv
@@ -28,7 +29,7 @@ Features
 
 3.Statistical analysis
   a.Acceptance rates per program
-  b. Average exam scores per program
+  b.Average exam scores per program
   c.Distribution of applicants by city and gender
   d.Top 10 applicants by average exam score
 
@@ -42,19 +43,12 @@ Features
 Project structure
 Semesterproject
   src/main/java/org/example
-    main.java
-    DatabseLoginLauncher
-    UniversityAdmissionsApp
-    UniversityAdmissionsGUI
+    main.java                  //Main program
+    DatabseLoginLauncher       //Database login
+    UniversityAdmissionsApp    //University admissions
+    UniversityAdmissionsGUI    //GUI
  sql
-   schema.sql
+   schema.sql                  //SQL Schema
  pom.xml
  readme.md
- Charts
-    Gender distribution
-    Acceptance rates
- Tablse
-    Distribution
-       City
-       Gender
-    Top 10 applicants   
+ readmeAssets  
