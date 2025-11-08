@@ -1,8 +1,8 @@
 GROUP 1
 Memebers:
-1.
-2.
-3.
+1. Adrian Osogo
+2. James Njao
+3. 
 4.
 5.
 6.
