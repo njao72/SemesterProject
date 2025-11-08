@@ -41,11 +41,11 @@ Features
 
 Project structure
 Semesterproject
-  src/main/java/com/datanalysis
+  src/main/java/org/example
     main.java
-    databse
-    gui
-    visualisation
+    DatabseLoginLauncher
+    UniversityAdmissionsApp
+    UniversityAdmissionsGUI
  sql
    schema.sql
  pom.xml
