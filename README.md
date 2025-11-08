@@ -50,4 +50,11 @@ Semesterproject
    schema.sql
  pom.xml
  readme.md
- charts
+ Charts
+    Gender distribution
+    Acceptance rates
+ Tablse
+    Distribution
+       City
+       Gender
+    Top 10 applicants   
