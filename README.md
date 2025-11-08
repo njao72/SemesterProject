@@ -2,9 +2,9 @@ GROUP 1
 Memebers:
 1. Adrian Osogo
 2. James Njao
-3. 
-4.
-5.
+3. Terrence Katua
+4. Emmanuel Kanyiri
+5. Jeff Muroki
 6.
 
 University Admissions Data Analysis
@@ -43,12 +43,15 @@ Features
 Project structure
 Semesterproject
   src/main/java/org/example
-    main.java                  //Main program
-    DatabseLoginLauncher       //Database login
-    UniversityAdmissionsApp    //University admissions
-    UniversityAdmissionsGUI    //GUI
+    main.java                  #Main program
+    DatabseLoginLauncher       #Database login
+    UniversityAdmissionsApp    #University admissions
+    UniversityAdmissionsGUI    #GUI
  sql
-   schema.sql                  //SQL Schema
+   schema.sql                  #SQL Schema
  pom.xml
  readme.md
- readmeAssets  
+ readmeAssets                  #Slides
+ resources                     #Table and visualisations
+    Tables
+    Charts
