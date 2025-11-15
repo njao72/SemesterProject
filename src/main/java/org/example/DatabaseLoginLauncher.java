@@ -16,7 +16,8 @@ public class DatabaseLoginLauncher {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 4, 4, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
+        //Define the components for the UI login form//
+        //Creates a string array containing  the names of the supported database types//
         String[] dbTypes = new String[] {"MySQL", "PostgreSQL", "MariaDB"};
         JComboBox<String> dbTypeCombo = new JComboBox<>(dbTypes);
         JTextField hostField = new JTextField("localhost", 20);
