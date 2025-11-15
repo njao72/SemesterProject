@@ -25,7 +25,7 @@ public class DatabaseLoginLauncher {
         JTextField dbNameField = new JTextField("University_admissions", 20);
         JTextField userField = new JTextField("root", 12);
         JPasswordField passwordField = new JPasswordField(12);
-
+//initializes a counter variable to keep track of the grid of the current grid row//
         int row = 0;
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Database Type:"), gbc);
         gbc.gridx = 1; panel.add(dbTypeCombo, gbc);
