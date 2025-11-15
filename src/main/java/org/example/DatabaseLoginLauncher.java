@@ -29,7 +29,7 @@ public class DatabaseLoginLauncher {
         int row = 0;
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Database Type:"), gbc);
         gbc.gridx = 1; panel.add(dbTypeCombo, gbc);
-
+       //move to the next row//
         row++;
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Host:"), gbc);
         gbc.gridx = 1; panel.add(hostField, gbc);
