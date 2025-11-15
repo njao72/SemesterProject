@@ -1,104 +1,87 @@
 package org.example;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+// Swing UI components
+import javax.swing.*; // JFrame, JPanel, JButton, JOptionPane, JFileChooser, etc.
+// AWT for layout and events
+import java.awt.*; // GridBagLayout, GridBagConstraints, Insets, EventQueue
+import java.awt.event.*; // ActionEvent, ActionListener
+// JDBC classes
+import java.sql.Connection; // JDBC Connection
+import java.sql.DriverManager; // DriverManager for obtaining connections
+import java.sql.SQLException; // Exception type for SQL errors
+// IO and utilities for CSV import
+import java.io.*; // File, FileReader, BufferedReader, IOException
+import java.util.*; // Collections utilities
+// JDBC helpers for prepared statements and resultsets
+import java.sql.PreparedStatement; // For parameterized INSERTs
+import java.sql.ResultSet; // For reading query results (not used here but imported)
+import java.sql.Statement; // For executing SQL statements (not used here but imported)
 
 public class DatabaseLoginLauncher {
-    // The main entry point of the java application//
+    // Program entry point. Launches the Swing UI on the Event Dispatch Thread.
     public static void main(String[] args) {
-        //Schedules the showLoginDialog  method to run the AWFT  Event dispatch Thread//
+        // Ensure Swing components are created on the EDT
         SwingUtilities.invokeLater(() -> showLoginDialog());
     }
-//Defines a private helper method  to create and display the login dialog//
+
+    // Display a modal dialog prompting the user for DB connection details.
     private static void showLoginDialog() {
-        //Creates a JPanel//
-        //Uses GridBagLayout for flexible,grid based component positioning//
+        // Panel with GridBagLayout to arrange labels and input fields
         JPanel panel = new JPanel(new GridBagLayout());
-        //Creates a Gridbaglayout constraint object.Object specifies constraints like objects e.t.c//
         GridBagConstraints gbc = new GridBagConstraints();
-        //Sets padding(inserts)of 4 pixels on one side of the components//
-        gbc.insets = new Insets(4, 4, 4, 4);
-        //Configures components to stretch horizontally to fill their grid cells//
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        //Define the components for the UI login form//
-        //Creates a string array containing  the names of the supported database types//
+        gbc.insets = new Insets(4, 4, 4, 4); // padding around components
+        gbc.fill = GridBagConstraints.HORIZONTAL; // make components stretch horizontally
+
+        // Dropdown for database type
         String[] dbTypes = new String[] {"MySQL", "PostgreSQL", "MariaDB"};
-        //Creates a dropdown menu(JComboBox) populated with the database types//
-        JComboBox<String> dbTypeCombo = new JComboBox<>(dbTypes);
-        //Creates a text field for the host ,prefilled with localhost and setting a preferred width(20 columns)//
+        JComboBox<String> dbTypeCombo = new JComboBox<>(dbTypes); // choose driver/url
+        // Text fields for connection parameters with sensible defaults
         JTextField hostField = new JTextField("localhost", 20);
-        //Creates a textfield for the port prefilled with 3306//
         JTextField portField = new JTextField("3306", 6);
-        //creates a textfield for the database prefiiled with University Admissions//
         JTextField dbNameField = new JTextField("University_admissions", 20);
-        //creates a textfield for the user field prefilled with root
         JTextField userField = new JTextField("root", 12);
-        //creates a textfield for the password field//
         JPasswordField passwordField = new JPasswordField(12);
-//initializes a counter variable to keep track of the grid of the current grid row//
+
+        // Place components into grid rows
         int row = 0;
-        //Add database types: at (row 0,col 0)//
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Database Type:"), gbc);
-        //add database dropdown at (row 0,col 1)//
         gbc.gridx = 1; panel.add(dbTypeCombo, gbc);
-       //move to the next row//
+
         row++;
-        // add host at (row 0, col 1)
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Host:"), gbc);
-        //add the host text field at (row 1, col 1)
         gbc.gridx = 1; panel.add(hostField, gbc);
-       //move to next row//
+
         row++;
-        // add port label at( row 2, col 0)
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Port:"), gbc);
-        //add port text field at (row 2, col 1)
         gbc.gridx = 1; panel.add(portField, gbc);
 
-        //move to next row//
         row++;
-        // add database label at( row 3, col 0)
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Database:"), gbc);
-        // add database field at (row 3, col 1)
         gbc.gridx = 1; panel.add(dbNameField, gbc);
 
-        //move to next row//
         row++;
-        // add username label at( row 3, col 0)
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Username:"), gbc);
-        // add username field at ( row 4, Col 1)
         gbc.gridx = 1; panel.add(userField, gbc);
 
-        //move to next row//
         row++;
-        // add database label at( row 3, col 0)
         gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Password:"), gbc);
-        // add password field at (row 5, col 1)
         gbc.gridx = 1; panel.add(passwordField, gbc);
 
-        //Shows the dialog and the get user input//
-        //Displays a modal dialog window containing custom panel//
-        //The potion variable will store which button the user pressed(ok,cancel)//
+        // Show the dialog and get the user's choice (OK/CANCEL)
         int option = JOptionPane.showConfirmDialog(null, panel, "Database Login",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        // checks if user clicked ok button//
+        // If user clicked OK, read inputs and attempt a JDBC connection
         if (option == JOptionPane.OK_OPTION) {
-            // retrieves user inputs from data fields//
-            String dbType = (String) dbTypeCombo.getSelectedItem();
-            String host = hostField.getText().trim();
-            String port = portField.getText().trim();
-            String db = dbNameField.getText().trim();
-            String user = userField.getText().trim();
-            //Securely retrieves the password as (char) and converts it to string
-            String password = new String(passwordField.getPassword());
-          // configure JDBC driver and URL based on datatype//
-            //Declares variable to hold the JDBC driver class name and connection URL//
+            String dbType = (String) dbTypeCombo.getSelectedItem(); // chosen DB
+            String host = hostField.getText().trim(); // host text field
+            String port = portField.getText().trim(); // port text field
+            String db = dbNameField.getText().trim(); // database name
+            String user = userField.getText().trim(); // username
+            String password = new String(passwordField.getPassword()); // password
+
+            // Resolve driver class and URL template based on selection
             String driverClass;
             String url;
-            //Use a switch statement to set the correct driver and URL format//
             switch (dbType) {
                 case "PostgreSQL":
                     driverClass = "org.postgresql.Driver";
@@ -110,47 +93,162 @@ public class DatabaseLoginLauncher {
                     break;
                 case "MySQL":
                 default:
+                    // Use MySQL Connector/J driver and a typical JDBC URL
                     driverClass = "com.mysql.cj.jdbc.Driver";
                     url = String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC", host, port, db);
                     break;
             }
 
-            // Attempt to connect to the database//
-            //Declare a connecton  object (from java.sql) and initializes it to null
+            // Attempt to load the driver and connect
             Connection conn = null;
             try {
-                //Load the specified JDBC class driver to memory//
-                Class.forName(driverClass);
-                //Attempt to connect to the database using the URL, user and password//
-                conn = DriverManager.getConnection(url, user, password);
+                Class.forName(driverClass); // ensure driver class available
+                conn = DriverManager.getConnection(url, user, password); // open connection
             } catch (ClassNotFoundException cnfe) {
-                //This catch block runs if the JDBC driver (the .jar file)is not found//
+                // Driver jar missing
                 JOptionPane.showMessageDialog(null, "JDBC Driver not found: " + driverClass + "\nPlease add the JDBC driver JAR to the classpath.", "Driver Error", JOptionPane.ERROR_MESSAGE);
                 return;
             } catch (SQLException sqle) {
-                //This catch block runs for any related SQL exceptions e.g(wrong password)//
+                // Connection failed
                 JOptionPane.showMessageDialog(null, "Failed to connect: " + sqle.getMessage(), "Connection Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // On success, open the dashboard and pass the connection
-            final Connection finalConn = conn;
+            // On success: optionally import CSV files, then launch the GUI with the open connection
+            final Connection finalConn = conn; // capture for inner runnable
             SwingUtilities.invokeLater(() -> {
                 try {
-                    //Creates a new instance of the main application window(UniversityAdmissionsGUI)//
-                    // Pass the active database connection to its constructor//
-                    UniversityAdmissionsGUI gui = new UniversityAdmissionsGUI(finalConn);
-                    // Make the main application window visible to the user//
-                    gui.setVisible(true);
+                    showImportDialog(finalConn); // optional CSV import step
+                    UniversityAdmissionsGUI gui = new UniversityAdmissionsGUI(finalConn); // create dashboard with live connection
+                    gui.setVisible(true); // show the dashboard window
                 } catch (Exception e) {
-                    //catch any unexpected errors during the main GUI admissions initialization
+                    // If anything goes wrong, notify user and close connection
                     JOptionPane.showMessageDialog(null, "Error launching dashboard: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    //print the full stack error to console for debugging//
                     e.printStackTrace();
-                    //Try to close database connection if  dashboard fails to launch//
                     try { if (finalConn != null) finalConn.close(); } catch (SQLException ignored) {}
                 }
             });
+        }
+    }
+
+    /**
+     * Show a small dialog allowing the user to import CSV files into three tables.
+     * The CSV must have a header row with column names matching the DB table columns.
+     */
+    private static void showImportDialog(Connection conn) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4,4,4,4);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JTextField applicantsField = new JTextField(30);
+        JTextField applicationsField = new JTextField(30);
+        JTextField examScoresField = new JTextField(30);
+
+        JButton browseApplicants = new JButton("Browse...");
+        JButton browseApplications = new JButton("Browse...");
+        JButton browseExam = new JButton("Browse...");
+
+        browseApplicants.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                applicantsField.setText(fc.getSelectedFile().getAbsolutePath());
+            }
+        });
+        browseApplications.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                applicationsField.setText(fc.getSelectedFile().getAbsolutePath());
+            }
+        });
+        browseExam.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                examScoresField.setText(fc.getSelectedFile().getAbsolutePath());
+            }
+        });
+
+        int row = 0;
+        gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Applicants CSV:"), gbc);
+        gbc.gridx = 1; panel.add(applicantsField, gbc);
+        gbc.gridx = 2; panel.add(browseApplicants, gbc);
+
+        row++; gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Applications CSV:"), gbc);
+        gbc.gridx = 1; panel.add(applicationsField, gbc);
+        gbc.gridx = 2; panel.add(browseApplications, gbc);
+
+        row++; gbc.gridx = 0; gbc.gridy = row; panel.add(new JLabel("Exam Scores CSV:"), gbc);
+        gbc.gridx = 1; panel.add(examScoresField, gbc);
+        gbc.gridx = 2; panel.add(browseExam, gbc);
+
+        int option = JOptionPane.showConfirmDialog(null, panel, "Import CSV data (optional)", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (option == JOptionPane.OK_OPTION) {
+            // For each non-empty field, attempt import
+            if (!applicantsField.getText().trim().isEmpty()) {
+                importCsvToTable(conn, applicantsField.getText().trim(), "applicants");
+            }
+            if (!applicationsField.getText().trim().isEmpty()) {
+                importCsvToTable(conn, applicationsField.getText().trim(), "applications");
+            }
+            if (!examScoresField.getText().trim().isEmpty()) {
+                importCsvToTable(conn, examScoresField.getText().trim(), "exam_scores");
+            }
+        }
+    }
+
+    /**
+     * Import a CSV file into the specified table. The CSV's first row must be column names.
+     * This method builds an INSERT statement using the header names and inserts all rows.
+     */
+    private static void importCsvToTable(Connection conn, String csvPath, String tableName) {
+        File f = new File(csvPath);
+        if (!f.exists()) {
+            JOptionPane.showMessageDialog(null, "File not found: " + csvPath, "Import Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String header = br.readLine();
+            if (header == null) {
+                JOptionPane.showMessageDialog(null, "Empty CSV file: " + csvPath, "Import Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            String[] cols = header.split(",");
+            for (int i = 0; i < cols.length; i++) cols[i] = cols[i].trim();
+
+            String placeholders = String.join(",", Collections.nCopies(cols.length, "?"));
+            String colList = String.join(",", cols);
+            String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, colList, placeholders);
+
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                String line;
+                int batch = 0;
+                while ((line = br.readLine()) != null) {
+                    // simple CSV split – does not fully support quoted commas
+                    String[] values = line.split(",");
+                    for (int i = 0; i < cols.length; i++) {
+                        String val = i < values.length ? values[i].trim() : null;
+                        if (val != null && val.equalsIgnoreCase("NULL")) val = null;
+                        ps.setString(i+1, val);
+                    }
+                    ps.addBatch();
+                    batch++;
+                    if (batch % 500 == 0) ps.executeBatch();
+                }
+                if (batch % 500 != 0) ps.executeBatch();
+                conn.commit();
+                JOptionPane.showMessageDialog(null, "Imported " + f.getName() + " into table " + tableName, "Import Complete", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                conn.rollback();
+                JOptionPane.showMessageDialog(null, "Failed to import " + f.getName() + ": " + ex.getMessage(), "Import Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (IOException | SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error reading or importing file: " + ex.getMessage(), "Import Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 }
