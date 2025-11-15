@@ -17,18 +17,31 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 
+/*Main application class for the university dashboard
+This class creates a Swing JFrame to display data from a MYSQL database
+using tables and JfreeCharts within a JTabbedPane
+ */
+
 public class UniversityAdmissionsApp extends JFrame {
+    //databse connecton object//
     private Connection connection;
+    //Text area displaying top applicants//
     private JTextArea outputArea;
+    //Tabbed pane to organize different views//
     private JTabbedPane tabbedPane;
+    //Pannel to hold city/gender table//
     private JPanel cityGenderPanel;
+    //table to display city and gender//
     private JTable cityGenderTable;
 
+    /*constructor for the university admissions app that initializes the user interface,
+    connects to the database and loads initial data*/
     public UniversityAdmissionsApp() {
         initializeUI();
         connectToDatabase();
         loadData();
     }
+    /*Set up main JFrame and its components*/
 
     private void initializeUI() {
         setTitle("University Admissions Dashboard");
@@ -55,10 +68,12 @@ public class UniversityAdmissionsApp extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
     }
-
+//Establishes connection to MYSQL databse//
     private void connectToDatabase() {
         try {
+            //load the mysql JDBC driver//
             Class.forName("com.mysql.cj.jdbc.Driver");
+            //Connect to the database//
             connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/University_admissions",
                     "root",
@@ -68,7 +83,7 @@ public class UniversityAdmissionsApp extends JFrame {
             showError("Database Connection Error", e);
         }
     }
-
+/*Creates a pannel for "City & Gender Distribution" tab.Pannel contains a Jtable within a JScrollpane*/
     private void createCityGenderPanel() {
         cityGenderPanel = new JPanel(new BorderLayout());
         cityGenderTable = new JTable();
@@ -76,7 +91,7 @@ public class UniversityAdmissionsApp extends JFrame {
         cityGenderPanel.add(scrollPane, BorderLayout.CENTER);
         tabbedPane.addTab("City & Gender Distribution", cityGenderPanel);
     }
-
+//creates a pannel for the charts//
     private void createChartsPanel() {
         JPanel chartsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         tabbedPane.addTab("Charts", chartsPanel);
@@ -90,6 +105,7 @@ public class UniversityAdmissionsApp extends JFrame {
             showError("Error Creating Charts", e);
         }
     }
+    //creates panel for top applicants tab//
 
     private void createTopApplicantsPanel() {
         JPanel topApplicantsPanel = new JPanel(new BorderLayout());
@@ -99,9 +115,10 @@ public class UniversityAdmissionsApp extends JFrame {
         topApplicantsPanel.add(scrollPane, BorderLayout.CENTER);
         tabbedPane.addTab("Top Applicants", topApplicantsPanel);
     }
-
+//Creates a bar chart panel showing acceptance rates per program//
     private JPanel createAcceptanceRatesChart() throws SQLException {
         JPanel panel = new JPanel(new BorderLayout());
+        //dataset for barchart//
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
         try (Statement stmt = connection.createStatement()) {
@@ -110,14 +127,14 @@ public class UniversityAdmissionsApp extends JFrame {
                     "FROM applicants AS a LEFT JOIN applications AS b ON a.applicant_id=b.applicant_id " +
                     "GROUP BY b.program";
             ResultSet rs = stmt.executeQuery(query);
-
+         //populate dataset from query results//
             while (rs.next()) {
                 dataset.addValue(rs.getDouble("acceptanceRate"),
                         "Acceptance Rate",
                         rs.getString("program"));
             }
         }
-
+   //Creates the barchart using JFreeChart's chart factory
         JFreeChart chart = ChartFactory.createBarChart(
                 "Acceptance Rate per Program",
                 "Program",
@@ -131,19 +148,20 @@ public class UniversityAdmissionsApp extends JFrame {
         panel.add(chartPanel);
         return panel;
     }
-
+//creates a histogram panel//
     private JPanel createExamScoresHistogram() throws SQLException {
         JPanel panel = new JPanel(new BorderLayout());
         List<Double> scores = new ArrayList<>();
-
+     //fetches all scores from database//
         try (Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT score FROM exam_scores");
             while (rs.next()) {
                 scores.add(rs.getDouble("score"));
             }
         }
-
+// convert list<Double> to double[] array
         double[] scoreArray = scores.stream().mapToDouble(d -> d).toArray();
+        //create dataset for histogram//
         HistogramDataset dataset = new HistogramDataset();
         dataset.addSeries("Scores", scoreArray, 20);
 

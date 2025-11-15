@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.*;
 import java.text.DecimalFormat;
 import org.jfree.chart.*;
-        import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.chart.plot.PlotOrientation;
@@ -15,7 +15,9 @@ import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 
 public class UniversityAdmissionsGUI extends JFrame {
+    //hold active connection to mysql database//
     private Connection connection;
+    //A text area at the bottom to display summary like top 10//
     private JTextArea outputArea;
     // Table models so we can refresh data without rebuilding UI
     private javax.swing.table.DefaultTableModel acceptanceTableModel;
@@ -23,46 +25,54 @@ public class UniversityAdmissionsGUI extends JFrame {
     private JTable acceptanceTable;
     private JTable avgScoresTable;
 
-    /**
+    /*
      * Default constructor - will attempt to initialize the database using
      * the built-in initializeDatabase() method (hardcoded connection info).
      */
     public UniversityAdmissionsGUI() {
         try {
+            // establish database connection//
             initializeDatabase();
+            //build graphical user interface
             buildUI();
         } catch (Exception e) {
+            //shows an error pop-up if initialization fails//
             JOptionPane.showMessageDialog(null, "Error initializing application: " + e.getMessage(),
                     "Initialization Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
 
-    /**
+    /*
      * Constructor that accepts an existing JDBC Connection. Useful when a
      * launcher dialog creates the connection (for example after prompting
      * the user for host/user/password).
      */
     public UniversityAdmissionsGUI(Connection connection) {
+        //Build UI immediately since  connection is ready//
         this.connection = connection;
         try {
             buildUI();
         } catch (Exception e) {
+            //shows error popup if UI connection fails//
             JOptionPane.showMessageDialog(null, "Error initializing UI: " + e.getMessage(),
                     "Initialization Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
 
-    /**
+    /*
      * Shared UI construction (assumes 'connection' is set).
      */
     private void buildUI() {
-        setTitle("University Admissions Dashboard");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+        //Basic window setup//
+        setTitle("University Admissions Dashboard");// set window title//
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// closes the app when x is clicked//
+        setLayout(new BorderLayout());// uses border layout for the main JFrame//
 
         // Create main panel with GridBagLayout
+        // We use GridBagLayout for a flexible layout that resizing well.
+        // It will hold the tabbed pane (top) and the output area (bottom)//
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -71,6 +81,7 @@ public class UniversityAdmissionsGUI extends JFrame {
 
         try {
             // Add tabs
+            //creates a each tab's content a JPannel and add it to its tabbed pane//
             tabbedPane.addTab("City & Gender", createCityGenderPanel());
             tabbedPane.addTab("Acceptance Rates (Chart)", createAcceptanceRatesChart());
             tabbedPane.addTab("Acceptance Rates (Table)", createAcceptanceRatesTablePanel());
@@ -79,9 +90,10 @@ public class UniversityAdmissionsGUI extends JFrame {
             tabbedPane.addTab("Exam Score Distribution", createExamScoresHistogram());
             tabbedPane.addTab("Gender Distribution", createGenderDistributionChart());
 
-            // Create text output area
+            // Create text output area for the bottom//
             outputArea = new JTextArea(10, 40);
             outputArea.setEditable(false);
+            //put the text area in a JScrollPane
             JScrollPane scrollPane = new JScrollPane(outputArea);
 
             // Add components to main panel
