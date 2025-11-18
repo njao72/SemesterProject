@@ -5,7 +5,7 @@ Memebers:
 3. Terrence Katua
 4. Emmanuel Kanyiri
 5. Jeff Muroki
-6.
+6. Innocent Ndueti
 
 University Admissions Data Analysis
 
@@ -52,15 +52,21 @@ Project structure
 
 Semesterproject
   src/main/java/org/example
+  
     main.java                  #Main program
     DatabseLoginLauncher       #Database login
     UniversityAdmissionsApp    #University admissions
     UniversityAdmissionsGUI    #GUI
  sql
+ 
    schema.sql                  #SQL Schema
+   
  pom.xml
+ 
  readme.md
+ 
  readmeAssets                  #Slides
+ 
  resources                     #Table and visualisations
     Tables
     Charts
