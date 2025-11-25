@@ -5,7 +5,7 @@ Memebers:
 3. Terrence Katua
 4. Emmanuel Kanyiri
 5. Jeff Muroki
-6. Innocent Ndueti
+
 
 University Admissions Data Analysis
 
