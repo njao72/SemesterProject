@@ -24,6 +24,11 @@ public class DatabaseLoginLauncher {
     }
 
     // Display a modal dialog prompting the user for DB connection details.
+    public static void showLoginDialogStatic() {
+        showLoginDialog();
+    }
+
+    // Display a modal dialog prompting the user for DB connection details.
     private static void showLoginDialog() {
         // Panel with GridBagLayout to arrange labels and input fields
         JPanel panel = new JPanel(new GridBagLayout());
@@ -114,21 +119,64 @@ public class DatabaseLoginLauncher {
                 return;
             }
 
-            // On success: optionally import CSV files, then launch the GUI with the open connection
+            // On success: show post-login dialog with analysis button
             final Connection finalConn = conn; // capture for inner runnable
             SwingUtilities.invokeLater(() -> {
                 try {
-                    showImportDialog(finalConn); // optional CSV import step
-                    UniversityAdmissionsGUI gui = new UniversityAdmissionsGUI(finalConn); // create dashboard with live connection
-                    gui.setVisible(true); // show the dashboard window
+                    showPostLoginDialog(finalConn); // show dialog with analysis button
                 } catch (Exception e) {
                     // If anything goes wrong, notify user and close connection
-                    JOptionPane.showMessageDialog(null, "Error launching dashboard: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Error after login: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     e.printStackTrace();
                     try { if (finalConn != null) finalConn.close(); } catch (SQLException ignored) {}
                 }
             });
         }
+    }
+
+    /**
+     * Show a post-login dialog with an "Analysis" button that launches the GUI.
+     * This allows the user to perform optional CSV import before running analysis.
+     */
+    private static void showPostLoginDialog(Connection conn) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel label = new JLabel("Database connection successful!");
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        panel.add(label, gbc);
+
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.5;
+        JButton importButton = new JButton("Import CSV Data");
+        importButton.addActionListener(e -> {
+            showImportDialog(conn);
+        });
+        panel.add(importButton, gbc);
+
+        gbc.gridx = 1;
+        JButton analysisButton = new JButton("Run Analysis");
+        analysisButton.addActionListener(e -> {
+            try {
+                UniversityAdmissionsGUI gui = new UniversityAdmissionsGUI(conn);
+                gui.setVisible(true);
+                // Close the parent dialog window that contains this post-login dialog
+                SwingUtilities.getWindowAncestor(panel).dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error launching analysis: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+        panel.add(analysisButton, gbc);
+
+        JOptionPane.showOptionDialog(null, panel, "Login Successful",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new Object[]{}, null);
     }
 
     /**
@@ -183,15 +231,23 @@ public class DatabaseLoginLauncher {
 
         int option = JOptionPane.showConfirmDialog(null, panel, "Import CSV data (optional)", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (option == JOptionPane.OK_OPTION) {
-            // For each non-empty field, attempt import
+            boolean imported = false;
             if (!applicantsField.getText().trim().isEmpty()) {
                 importCsvToTable(conn, applicantsField.getText().trim(), "applicants");
+                imported = true;
             }
             if (!applicationsField.getText().trim().isEmpty()) {
                 importCsvToTable(conn, applicationsField.getText().trim(), "applications");
+                imported = true;
             }
             if (!examScoresField.getText().trim().isEmpty()) {
                 importCsvToTable(conn, examScoresField.getText().trim(), "exam_scores");
+                imported = true;
+            }
+            // If any import was done, launch analysis window
+            if (imported) {
+                UniversityAdmissionsGUI gui = new UniversityAdmissionsGUI(conn);
+                gui.setVisible(true);
             }
         }
     }
@@ -213,11 +269,34 @@ public class DatabaseLoginLauncher {
                 JOptionPane.showMessageDialog(null, "Empty CSV file: " + csvPath, "Import Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String[] cols = header.split(",");
-            for (int i = 0; i < cols.length; i++) cols[i] = cols[i].trim();
+            String[] csvCols = header.split(",");
+            for (int i = 0; i < csvCols.length; i++) csvCols[i] = csvCols[i].trim();
 
-            String placeholders = String.join(",", Collections.nCopies(cols.length, "?"));
-            String colList = String.join(",", cols);
+            // Get actual table columns from database metadata
+            java.util.List<String> validCols = new java.util.ArrayList<>();
+            try (java.sql.ResultSet rs = conn.getMetaData().getColumns(null, null, tableName, null)) {
+                while (rs.next()) {
+                    validCols.add(rs.getString("COLUMN_NAME"));
+                }
+            }
+
+            // Filter CSV columns to only those that exist in the table
+            java.util.List<String> colsToImport = new java.util.ArrayList<>();
+            java.util.List<Integer> csvIndices = new java.util.ArrayList<>();
+            for (int i = 0; i < csvCols.length; i++) {
+                if (validCols.contains(csvCols[i])) {
+                    colsToImport.add(csvCols[i]);
+                    csvIndices.add(i);
+                }
+            }
+
+            if (colsToImport.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "No matching columns found in table " + tableName, "Import Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String placeholders = String.join(",", Collections.nCopies(colsToImport.size(), "?"));
+            String colList = String.join(",", colsToImport);
             String sql = String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, colList, placeholders);
 
             conn.setAutoCommit(false);
@@ -227,8 +306,9 @@ public class DatabaseLoginLauncher {
                 while ((line = br.readLine()) != null) {
                     // simple CSV split – does not fully support quoted commas
                     String[] values = line.split(",");
-                    for (int i = 0; i < cols.length; i++) {
-                        String val = i < values.length ? values[i].trim() : null;
+                    for (int i = 0; i < csvIndices.size(); i++) {
+                        int csvIdx = csvIndices.get(i);
+                        String val = csvIdx < values.length ? values[csvIdx].trim() : null;
                         if (val != null && val.equalsIgnoreCase("NULL")) val = null;
                         ps.setString(i+1, val);
                     }
